@@ -12,16 +12,16 @@ const states = [
   { //  0 |  19 | A | idle
     duration: 6,
     hotspots: [
-      [ 0.35, 0.43, 0.42, 0.52, 3 ], // right fingers
-      [ 0.40, 0.34, 0.45, 0.43, 5 ], // right arm
-      [ 0.44, 0.26, 0.53, 0.34, [ 2, 17 ] ], // face
-      [ 0.52, 0.34, 0.57, 0.43, 16 ], // left arm
-      [ 0.56, 0.43, 0.63, 0.52, 1 ], // left fingers
-      [ 0.45, 0.34, 0.52, 0.43, [ 18, 11, 7 ] ], // chest
-      [ 0.42, 0.43, 0.56, 0.48, [ 9, 11, 7 ] ], // belly
-      [ 0.42, 0.48, 0.56, 0.53, [ 14, 10 ] ], // hips
-      [ 0.46, 0.53, 0.56, 0.60, [ 13, 7 ] ], // upper legs
-      [ 0.46, 0.60, 0.53, 0.77, [ 15, 12 ] ], // lower legs
+      [ 0.25, 0.43, 0.37, 0.54, 3 ], // right fingers
+      [ 0.33, 0.32, 0.41, 0.43, 5 ], // right arm
+      [ 0.43, 0.24, 0.51, 0.32, [ 2, 17 ] ], // face
+      [ 0.52, 0.32, 0.60, 0.43, 16 ], // left arm
+      [ 0.57, 0.43, 0.69, 0.54, 1 ], // left fingers
+      [ 0.41, 0.32, 0.52, 0.43, [ 18, 11, 7 ] ], // chest
+      [ 0.40, 0.43, 0.54, 0.48, [ 9, 11, 7 ] ], // belly
+      [ 0.40, 0.48, 0.55, 0.53, [ 14, 10 ] ], // hips
+      [ 0.42, 0.53, 0.56, 0.60, [ 13, 7 ] ], // upper legs
+      [ 0.43, 0.60, 0.53, 0.83, [ 15, 12 ] ], // lower legs
     ],
     bored: [ 4, 8 ]
   },
@@ -154,14 +154,14 @@ const states = [
   { // 33 | 224 | B | idle
     duration: 6,
     hotspots: [
-      [ 0.39, 0.28, 0.46, 0.37, 21 ], // right arm
-      [ 0.46, 0.26, 0.55, 0.34, [ 22, 31 ] ], // face
-      [ 0.55, 0.24, 0.61, 0.36, [ 32, 29 ] ], // left arm
-      [ 0.46, 0.34, 0.55, 0.43, [ 25, 20 ] ], // chest
-      [ 0.46, 0.43, 0.56, 0.48, [ 23, 24 ] ], // belly
-      [ 0.46, 0.48, 0.59, 0.52, [ 26, 24, 29 ] ], // hips
-      [ 0.46, 0.52, 0.62, 0.60, 29 ], // upper legs
-      [ 0.47, 0.60, 0.54, 0.77, 19 ], // lower legs
+      [ 0.31, 0.24, 0.44, 0.35, 21 ], // right arm
+      [ 0.46, 0.24, 0.54, 0.32, [ 22, 31 ] ], // face
+      [ 0.55, 0.18, 0.66, 0.36, [ 32, 29 ] ], // left arm
+      [ 0.43, 0.32, 0.56, 0.42, [ 25, 20 ] ], // chest
+      [ 0.44, 0.42, 0.57, 0.48, [ 23, 24 ] ], // belly
+      [ 0.43, 0.48, 0.59, 0.54, [ 26, 24, 29 ] ], // hips
+      [ 0.45, 0.52, 0.68, 0.61, 29 ], // upper legs
+      [ 0.47, 0.61, 0.54, 0.79, 19 ], // lower legs
     ],
     bored: 27
   },
@@ -194,7 +194,8 @@ function tickleHotspot(target){
 
 function playState(){
   video.currentTime = state * VIDEO_SEGMENT_DURATION + VIDEO_SEGMENT_SAFETY_OFFSET;
-  video.play();
+  video.muted = false;
+  if(video.paused) video.play();
   score.innerText = pcStatesSeen();
 }
 
@@ -208,6 +209,7 @@ function animationFrame(){
   // Check if the video needs to move on or loop
   if(video.paused) return;
   if(video.currentTime < ((state * 7) + states[state].duration)) return;
+  console.log('x');
   if('undefined' != typeof states[state].then) return tickleHotspot(states[state].then); // video leads to another
   playState(); // video loops
 
@@ -261,8 +263,6 @@ window.addEventListener('click', function(e){
   const videoRect = video.getBoundingClientRect();
   const videoXpc = (e.clientX - videoRect.left) / videoRect.width; // %age "across" video
   const videoYpc = (e.clientY - videoRect.top) / videoRect.height; // %age "down" video
-  // Early exclude any clicks outside the mattress area:
-  if(videoXpc < 0.3 || videoXpc > 0.7 || videoYpc < 0.2 || videoYpc > 0.8) return;
   // Try to find a matching hotspot
   const hotspot = getHotspot(videoXpc, videoYpc);
   if(!hotspot) return;
@@ -274,7 +274,9 @@ window.addEventListener('click', function(e){
 });
 
 document.addEventListener('visibilitychange', function(){
-  if(document.hidden) { video.pause(); } else { video.play(); }
+  if(document.hidden) { video.pause(); } else {
+    if(video.paused) video.play();
+  }
 }, false);
 
 window.addEventListener('keydown', function(e){
@@ -292,7 +294,19 @@ window.addEventListener('keyup', function(e){
 });
 
 function windowResized(){
+  // Resize video
+  const widescreen = (window.innerHeight * 0.791 < window.innerWidth);
+  if(widescreen) {
+    video.height = window.innerHeight;
+    video.width = window.innerHeight * 0.791;
+  } else {
+    video.width = window.innerWidth;
+    video.height = window.innerWidth / 0.791;
+  }
+  // Recalculate footer coverage
   footerRect = footer.getBoundingClientRect();
 }
 window.addEventListener('resize', windowResized);
+setTimeout(windowResized, 100);
 setTimeout(windowResized, 1000);
+// USEFUL FOR DEBUGGING: setTimeout(showHotspotOverlay, 120);

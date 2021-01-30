@@ -16,6 +16,7 @@ body {
   font-family: 'Raleway', sans-serif;
   color: white;
   justify-content: center;
+  align-items: center;
   cursor: url(null.png), none;
 }
 video {
@@ -50,6 +51,7 @@ footer {
 ul {
   display: flex;
   margin: 0;
+  padding: 0;
   list-style: none;
   flex-wrap: wrap;
   justify-content: center;
