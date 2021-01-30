@@ -288,6 +288,7 @@ window.addEventListener('mousemove', function(e){
 });
 
 window.addEventListener('click', function(e){
+  if(blowaway) return; // ignore clicks during blowaway
   const videoRect = video.getBoundingClientRect();
   const videoXpc = (e.clientX - videoRect.left) / videoRect.width; // %age "across" video
   const videoYpc = (e.clientY - videoRect.top) / videoRect.height; // %age "down" video
