@@ -9,6 +9,7 @@ const BLOWAWAY_START_LEFT = 0.40;
 const BLOWAWAY_START_TOP = 0.28;
 const BLOWAWAY_TOTAL_DURATION = 5000;
 const video = document.querySelector('video');
+const audio = document.querySelector('audio');
 const canvas = document.querySelector('canvas');
 const cursor = document.getElementById('cursor');
 const footer = document.querySelector('footer');
@@ -288,6 +289,7 @@ window.addEventListener('mousemove', function(e){
 });
 
 window.addEventListener('click', function(e){
+  if(audio.paused) audio.play();
   if(blowaway) return; // ignore clicks during blowaway
   const videoRect = video.getBoundingClientRect();
   const videoXpc = (e.clientX - videoRect.left) / videoRect.width; // %age "across" video
