@@ -36,9 +36,15 @@ canvas.show {
   top: 50%;
   left: 50%;
   transform-origin: 80% 80%;
+  opacity: 1;
+  transition: opacity 1.5s;
 }
 #cursor.active {
   animation: tickle 0.25s ease 2;
+}
+#cursor.hide {
+  opacity: 0;
+  transition: opacity 0s;
 }
 footer {
   position: absolute;

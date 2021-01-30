@@ -3,6 +3,11 @@ const VIDEO_SEGMENT_DURATION = 7; // seconds
 const VIDEO_SEGMENT_SAFETY_OFFSET = 1 / VIDEO_FPS; // seconds
 const BOREDOM_TIMEOUT = 20; // seconds
 const TOTAL_STATES = 32;
+const BLOWAWAY_SPEED = 0.5;
+const BLOWAWAY_DELAY = 2400;
+const BLOWAWAY_START_LEFT = 0.40;
+const BLOWAWAY_START_TOP = 0.28;
+const BLOWAWAY_TOTAL_DURATION = 4000;
 const video = document.querySelector('video');
 const canvas = document.querySelector('canvas');
 const cursor = document.getElementById('cursor');
@@ -145,7 +150,8 @@ const states = [
   },
   { // 31 | 218 | B | blow away from face
     duration: 2.86,
-    then: 33
+    then: 33,
+    blowaway: true
   },
   { // 32 | 331 | B | "no more" hands, scream
     duration: 3.12,
@@ -168,6 +174,7 @@ const states = [
 ];
 let state = 0, stateHistory = [], bored = false, cursorX = 0, cursorY = 0;
 let footerRect = footer.getBoundingClientRect();
+let blowaway = false, blowawaySince;
 
 function getHotspot(xpc, ypc){
   return (states[state].hotspots || []).find((hotspot)=>
@@ -195,24 +202,45 @@ function tickleHotspot(target){
 function playState(){
   video.currentTime = state * VIDEO_SEGMENT_DURATION + VIDEO_SEGMENT_SAFETY_OFFSET;
   video.muted = false;
+  if(states[state].blowaway) blowaway = true;
   if(video.paused) video.play();
   score.innerText = pcStatesSeen();
 }
 
-function animationFrame(){
+function animationFrame(timestamp){
   window.requestAnimationFrame(animationFrame);
-  // Move the "cursor" to the real cursor position
-  if(cursorY < footerRect.top){ // don't custom-cursor over the footer
-    cursor.style.left = `${cursorX}px`;
-    cursor.style.top = `${cursorY}px`;
-  } 
+  if(blowaway){
+    // Cursor is being blown away; move in accordance with animation, not mouse
+    if(blowawaySince === undefined) blowawaySince = timestamp;
+    const blowawayDuration = timestamp - blowawaySince;
+    const videoRect = video.getBoundingClientRect();
+    const distance = (blowawayDuration < BLOWAWAY_DELAY ? 0 : BLOWAWAY_SPEED * (timestamp - BLOWAWAY_DELAY - blowawaySince));
+    const blowawayStartLeft = videoRect.left + (videoRect.width * BLOWAWAY_START_LEFT);
+    const blowawayStartTop = videoRect.top + (videoRect.height * BLOWAWAY_START_TOP);
+    const blowawayLeft = blowawayStartLeft - distance;
+    const blowawayTop = blowawayStartTop + distance;
+    cursor.style.left = `${blowawayLeft}px`;
+    cursor.style.top = `${blowawayTop}px`;
+    if(blowawayDuration > BLOWAWAY_TOTAL_DURATION){
+      cursor.classList.add('hide');
+      setTimeout(function(){
+        blowaway = false;
+        blowawaySince = undefined;
+        cursor.classList.remove('hide');
+      }, 1);
+    }
+  } else {
+    // Otherwise: move the "cursor" to the real cursor position
+    if(cursorY < footerRect.top){ // don't custom-cursor over the footer
+      cursor.style.left = `${cursorX}px`;
+      cursor.style.top = `${cursorY}px`;
+    }
+  }
   // Check if the video needs to move on or loop
   if(video.paused) return;
   if(video.currentTime < ((state * 7) + states[state].duration)) return;
-  console.log('x');
   if('undefined' != typeof states[state].then) return tickleHotspot(states[state].then); // video leads to another
   playState(); // video loops
-
 }
 animationFrame();
 
@@ -309,4 +337,3 @@ function windowResized(){
 window.addEventListener('resize', windowResized);
 setTimeout(windowResized, 100);
 setTimeout(windowResized, 1000);
-// USEFUL FOR DEBUGGING: setTimeout(showHotspotOverlay, 120);
