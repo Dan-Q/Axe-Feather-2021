@@ -11,7 +11,9 @@ piece of advertising history. This project attempts to produce a moderatey-faith
 
 ## How and why was this made?
 
-...
+For a full explanation of how this was made (and a semi-coherent explanation of why), see the accompanying blog post at https://danq.me/axe-feather-2021. Spoiler: the "why" is probably best described as COVID-lockdown related cabin fever.
+
+You can also watch a video showing all of the clips extracted from the original ad, at https://www.youtube.com/watch?v=FnllqIQe8bQ
 
 ## License
 
